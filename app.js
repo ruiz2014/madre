@@ -14,6 +14,7 @@ app.use(bodyParser.json()) // for parsing application/json
 const server = require('http').createServer(app);
 
 const subDatabse = [];
+const subp = require("./sub.txt");
 
 const apiKeys = { 
     pubKey: "BJ6kaUF6KBhRSnxHej9fEwuAFtpwLMYxdUYidRb4-VCthYwVqoCD72NrDYrDkKi8RGUKyPTr48rKw2nUEQcSZaY", 
@@ -29,6 +30,38 @@ app.get("/", (req, res) => {
 app.post("/save-subscription", (req, res) => {
     subDatabse.push(req.body);
     // console.log(req.body);
+
+    // // STEP 2: Adding new data to users object 
+    // subp.push(req.body);
+
+    // // STEP 3: Writing to a file
+    // fs.writeFile(
+    //     "sub.txt",
+    //     JSON.stringify(subp),
+    //     err => {
+    //     // Checking for errors 
+    //     if (err) throw err;
+
+    //     // Success 
+    //     console.log("Done writing");
+    // }); 
+
+    const datosJSON = req.body; //JSON.stringify(req.body);
+
+// 4. Escribe la cadena JSON en un archivo de texto
+// fs.writeFile('sub.json', datosJSON, 'utf8', (err) => {
+//   if (err) {
+//     console.error('Error al guardar el archivo:', err);
+//     return;
+//   }
+//   console.log('El objeto JSON se guardó en salida.txt');
+//   console.log(req.body);
+// });
+
+
+console.log(subDatabse)
+
+
     res.json({ status: "Success", message: "Subscription saved!" })
     // res.send("voy a llorar aunque no lo creo  ... en produccion voy a llorar :( ");
 })
@@ -70,22 +103,22 @@ app.post("/send-kitchen", (req, res)=>{
       body : message
   });
 
-  // endP.forEach((punto)=>{
-  //     // console.log(punto.id);
-  //     const sub = {
-  //         endpoint: punto.endpoint,
-  //         expirationTime: null,
-  //         keys: {
-  //           p256dh: punto.p256dh,
-  //           auth: punto.auth
-  //         }
-  //       };
-  //       webpush.sendNotification(sub, payload);
+  subDatabse.forEach((punto)=>{
+      // console.log(punto.id);
+      // const sub = {
+      //     endpoint: punto.endpoint,
+      //     expirationTime: null,
+      //     keys: {
+      //       p256dh: punto.p256dh,
+      //       auth: punto.auth
+      //     }
+      //   };
+        webpush.sendNotification(punto, payload);
          
-  // })
-  webpush.sendNotification(subDatabse[0], payload);
-  res.json({'joder' :'joder'})
-  // res.json({id: id, message: message})
+  })
+  // webpush.sendNotification(subDatabse[0], payload);
+  // res.json({'joder' :subDatabse[0]})
+  res.json({ message: message})
 })
 
 const io = require("socket.io")(server, {
