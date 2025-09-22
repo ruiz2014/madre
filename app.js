@@ -2,6 +2,8 @@ var cors = require('cors')
 const express = require('express');
 const webpush = require('web-push');
 const fs = require('fs');
+const db = require('./database/db.js');
+const Subscription = require('./models/Subscription.js');
 const app = express();
 app.use(cors())
 app.use(express.json());
@@ -28,40 +30,14 @@ app.get("/", (req, res) => {
 })
 
 app.post("/save-subscription", (req, res) => {
-    subDatabse.push(req.body);
+
+  const subscriptions = '';   
+  subDatabse.push(req.body);
     // console.log(req.body);
-
-    // // STEP 2: Adding new data to users object 
-    // subp.push(req.body);
-
-    // // STEP 3: Writing to a file
-    // fs.writeFile(
-    //     "sub.txt",
-    //     JSON.stringify(subp),
-    //     err => {
-    //     // Checking for errors 
-    //     if (err) throw err;
-
-    //     // Success 
-    //     console.log("Done writing");
-    // }); 
-
     const datosJSON = req.body; //JSON.stringify(req.body);
 
-// 4. Escribe la cadena JSON en un archivo de texto
-// fs.writeFile('sub.json', datosJSON, 'utf8', (err) => {
-//   if (err) {
-//     console.error('Error al guardar el archivo:', err);
-//     return;
-//   }
-//   console.log('El objeto JSON se guardó en salida.txt');
-//   console.log(req.body);
-// });
-
-
-console.log(subDatabse)
-
-
+    // console.log(subDatabse) ///////////////////////////////////////QUITAR LA CONSOLE.LOG
+    // console.log(traer)
     res.json({ status: "Success", message: "Subscription saved!" })
     // res.send("voy a llorar aunque no lo creo  ... en produccion voy a llorar :( ");
 })
@@ -103,19 +79,92 @@ app.post("/send-kitchen", (req, res)=>{
       body : message
   });
 
-  subDatabse.forEach((punto)=>{
-      // console.log(punto.id);
-      // const sub = {
-      //     endpoint: punto.endpoint,
-      //     expirationTime: null,
-      //     keys: {
-      //       p256dh: punto.p256dh,
-      //       auth: punto.auth
-      //     }
-      //   };
-        webpush.sendNotification(punto, payload);
+  async function joder(){
+    const result = await Subscription.findAll({
+          where: {
+              status: 1 // Busca usuarios con el nombre exacto
+          }
+        });
+
+    return result;
+  }
+
+  async function procesarDatos() {
+    try {
+      // Usar await para esperar a que obtenerDatos() termine y guardar su resultado en una variable
+      const resultado = await joder(); 
+
+      resultado.forEach((subscription)=>{
+          const sub =  {
+            endpoint: subscription.endpoint,
+              keys: {
+                p256dh: subscription.p256dh,
+                auth: subscription.auth
+              }
+          };
+          webpush.sendNotification(sub, payload);
+      })
+    //  console.log(resultado); // Ahora puedes usar 'resultado' como un valor síncrono
+    } catch (error) {
+      console.error("Ocurrió un error:", error);
+    }
+  }
+
+ const  fio = procesarDatos()
+  // console.log(fio);
+
+  // fio.forEach((subscription)=>{
+  //         const sub =  {
+  //           endpoint: subscription.endpoint,
+  //             keys: {
+  //               p256dh: subscription.p256dh,
+  //               auth: subscription.auth
+  //             }
+  //         };
+  //         webpush.sendNotification(sub, payload);
+  //     })
+
+
+
+
+
+
+  // const subDatabse2 = [];
+//   async function traer() {
+//     const result = await Subscription.findAll();
+
+//     result.forEach((subscription) => {
+//       const sub =  {
+//         endpoint: subscription.endpoint,
+//           keys: {
+//             p256dh: subscription.p256dh,
+//             auth: subscription.auth
+//           }
+//       };
+//       subDatabse2.push(sub);
+//       // webpush.sendNotification(sub, payload);
+//       // console.log("1")
+//     })
+//   }
+
+//   traer();
+// console.log(subDatabse2)
+//   subDatabse2.forEach((punto)=>{
+//       // console.log(punto.id);
+//       // const sub = {
+//       //     endpoint: punto.endpoint,
+//       //     expirationTime: null,
+//       //     keys: {
+//       //       p256dh: punto.p256dh,
+//       //       auth: punto.auth
+//       //     }
+//       //   };
+//         webpush.sendNotification(punto, payload);
          
-  })
+//   })
+
+
+
   // webpush.sendNotification(subDatabse[0], payload);
   // res.json({'joder' :subDatabse[0]})
   res.json({ message: message})
@@ -137,6 +186,8 @@ io.on('connection', (socket) => {
   });
 
 });
+
+db.authenticate();
 
 const port = process.env.PORT || 3000;
 server.listen(port, () => {
